@@ -1,7 +1,7 @@
 '''
 Created on 05/nov/2013
 
-@author: restaglu
+@author: <luca.restagno@gmail.com>
 '''
 import json, Constants
 
@@ -28,6 +28,15 @@ class Model():
         path = str(file_path)
         t = path.split("/")
         return t[ len(t)-1 ]
+    
+    def get_file_folder(self, file_path):
+        path = file_path
+        t = path.split("/")
+        str = ""
+        for ix in range(len(t)-1):
+            str = str + t[ix] + "/"
+            
+        return str
     
     def is_document_present(self, file_path):
         for ix in range(len(self.TABS)):
