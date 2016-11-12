@@ -10,6 +10,30 @@ from PyQt4 import QtCore
 from PyQt4.QtWebKit import QWebView
 from PyQt4.QtCore import pyqtSlot,SIGNAL,SLOT
 import os, platform, subprocess
+from PyQt4 import QtCore, QtGui, uic
+import sys
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+mwin, bwin = uic.loadUiType("mdtree_ui.ui")
+
+class myLeftPanel(mwin, bwin):
+    def __init__(self):
+        super(myLeftPanel, self).__init__()
+        self.setupUi(self)
+        self.show()
+        model = QtGui.QFileSystemModel()
+        print(QDir.currentPath())
+        self.tree_dir.setModel(model)
+        model.setRootPath("")
+        self.tree_dir.resize(QSize(100, self.tree_dir.height()))
+        #self.tree_dir.doubleClicked.connect(self.btn_doubleclicked_check)
+
+    def btn_doubleclicked_check(self, index):
+        print("double click")
+        d = index.data()
+        if len(d.toString()) > 0:
+            print(d.toString())
 
 class myTextEdit(QtGui.QTextEdit):
         
@@ -97,6 +121,7 @@ class View(QtGui.QMainWindow):
         inputEdit.setTabStopWidth(20)
         
         inputEdit.setGeometry(0,0,200,200)
+        inputEdit.setMinimumWidth(100)
         preview = QWebView()
         preview.setGeometry(0,200,200,200)
         inputEdit.preview = preview
@@ -111,11 +136,15 @@ class View(QtGui.QMainWindow):
         
         self.tabs.addTab(tab,title)
         #self.tabs.setWindowTitle('PyQt QTabWidget Add Tabs and Widgets Inside Tab')
-        
+
+        splitter = QtGui.QSplitter()
         tab_hbox = QtGui.QHBoxLayout()
         
-        tab_hbox.addWidget(inputEdit)
-        tab_hbox.addWidget(preview)
+        splitter.addWidget(inputEdit)
+        splitter.addWidget(preview)
+        # splitter in the middle
+        splitter.setSizes([splitter.width()/2, splitter.width()/2])
+        tab_hbox.addWidget(splitter)
         tab.setLayout(tab_hbox)
         
         return [inputEdit, preview]
@@ -126,12 +155,21 @@ class View(QtGui.QMainWindow):
     def initUI(self, widget):
         
         hbox = QtGui.QHBoxLayout()
-        
+
+        self.panel_left = myLeftPanel()
+
         self.tabs = QtGui.QTabWidget()
         self.tabs.setTabsClosable(True)
-        
-        hbox.addWidget(self.tabs)
+        self.splitter = QSplitter()
+        self.splitter.setOpaqueResize(False)
+
+        self.splitter.addWidget(self.panel_left)
+        #self.panel_left.setMaximumWidth(200)
+        self.splitter.addWidget(self.tabs)
+        self.splitter.setSizes([100, 2000])
+        hbox.addWidget(self.splitter)
         widget.setLayout(hbox)
+        self.panel_left.tree_dir.doubleClicked.connect(self.on_doubleclicked_file)
         
         self.setCentralWidget(widget)
         
@@ -168,7 +206,14 @@ class View(QtGui.QMainWindow):
         formLayout.addRow(rowLayout)
         
         self.prefs.setLayout(formLayout)
-        
+
+    def on_doubleclicked_file(self, index):
+        d = index.data()
+        if len(d.toString()) > 0:
+            print(d.toString())
+
+        pass
+
     def update_status(self, status):
         self.statusBar().showMessage( status )
         

@@ -42,6 +42,9 @@ class Controller():
         self.VIEW.mapper.mapped['QString'].connect(self.open_file_path)
         
         self.VIEW.themesMapper.mapped['QString'].connect(self.change_theme)
+
+        # connect between doubleclicked with open file
+        self.VIEW.panel_left.connect(self.VIEW.panel_left, SIGNAL("openFile(QString)"), self.openFileSlot)
         
         self.refresh_recent_documents()
         self.load_themes()
@@ -68,7 +71,11 @@ class Controller():
         y = preview.page().mainFrame().scrollPosition().y()
         
         #preview.reload()
-        
+
+    @pyqtSlot(QtCore.QString)
+    def openFileSlot(self, filepath):
+        print("openFileSlot {}".format(filepath))
+        pass
     @pyqtSlot(int)
     def tabChangedSlot(self,argTabIndex):
         self.MODEL.set_active_tab(argTabIndex)
