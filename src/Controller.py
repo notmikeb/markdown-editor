@@ -30,6 +30,8 @@ class Controller():
         self.VIEW.preferencesAction.triggered.connect(self.show_preferences)
         self.VIEW.syntaxAction.triggered.connect(self.open_references)
         self.VIEW.browserButton.clicked.connect(self.select_browser)
+
+        self.VIEW.openexist.connect(self.open_filepath)
         
         uis = self.VIEW.add_tab( Constants.EMPTY_TAB_TITLE )
         inputEdit = uis[0]
@@ -176,6 +178,10 @@ class Controller():
     def open_file(self):
         file_path = self.VIEW.select_file()
         if file_path != False:
+            self.open_file_path(file_path)
+
+    def open_filepath(self, file_path):
+        if file_path != False and len(file_path) > 0:
             self.open_file_path(file_path)
             
     

@@ -11,9 +11,9 @@ class mywin(mwin, bwin):
         super(mywin, self).__init__()
         self.setupUi(self)
         self.show()
-        model = QtGui.QFileSystemModel()
+        self.model = QtGui.QFileSystemModel()
         print(QDir.currentPath())
-        self.tree_dir.setModel(model)
+        self.tree_dir.setModel(self.model)
         self.tree_dir.doubleClicked .connect(self.btn_doubleclicked_check)
 
     def btn_doubleclicked_check(self, index):

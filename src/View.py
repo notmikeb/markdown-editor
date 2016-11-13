@@ -22,11 +22,13 @@ class myLeftPanel(mwin, bwin):
         super(myLeftPanel, self).__init__()
         self.setupUi(self)
         self.show()
-        model = QtGui.QFileSystemModel()
+        self.model = QtGui.QFileSystemModel()
         print(QDir.currentPath())
-        self.tree_dir.setModel(model)
-        model.setRootPath("")
+        self.tree_dir.setModel(self.model)
+        self.model.setRootPath("")
         self.tree_dir.resize(QSize(100, self.tree_dir.height()))
+        for i in range(1, self.model.columnCount()):
+            self.tree_dir.hideColumn(i)
         #self.tree_dir.doubleClicked.connect(self.btn_doubleclicked_check)
 
     def btn_doubleclicked_check(self, index):
@@ -75,7 +77,8 @@ class myTextEdit(QtGui.QTextEdit):
     
 
 class View(QtGui.QMainWindow):
-    
+    openexist = QtCore.pyqtSignal(QtCore.QString, name = "openexist(QtCore.QString)")
+
     def __init__(self):
         super(View, self).__init__()
         
@@ -161,12 +164,11 @@ class View(QtGui.QMainWindow):
         self.tabs = QtGui.QTabWidget()
         self.tabs.setTabsClosable(True)
         self.splitter = QSplitter()
-        self.splitter.setOpaqueResize(False)
 
         self.splitter.addWidget(self.panel_left)
         #self.panel_left.setMaximumWidth(200)
         self.splitter.addWidget(self.tabs)
-        self.splitter.setSizes([100, 2000])
+        self.splitter.setSizes([300 + self.width()/10, 1000])
         hbox.addWidget(self.splitter)
         widget.setLayout(hbox)
         self.panel_left.tree_dir.doubleClicked.connect(self.on_doubleclicked_file)
@@ -208,10 +210,17 @@ class View(QtGui.QMainWindow):
         self.prefs.setLayout(formLayout)
 
     def on_doubleclicked_file(self, index):
-        d = index.data()
-        if len(d.toString()) > 0:
-            print(d.toString())
-
+        oldfilepath = ""
+        indexs = self.panel_left.tree_dir.selectionModel().selectedIndexes()
+        for i in [indexs[0]]:
+            newfilepath = self.panel_left.model.filePath(i)
+            if newfilepath != oldfilepath:
+                if  str(newfilepath.toLower().toLocal8Bit()).endswith( tuple([".md",".txt"]) ):
+                    print(newfilepath)
+                    self.openexist.emit(QString(newfilepath))
+            filepath = newfilepath
+        # send a action to
+        #self.openexist.emit( QString(filepath))
         pass
 
     def update_status(self, status):

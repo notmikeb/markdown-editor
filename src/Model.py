@@ -4,6 +4,7 @@ Created on 05/nov/2013
 @author: <luca.restagno@gmail.com>
 '''
 import json, Constants
+import codecs
 
 class Model():
     '''
@@ -79,12 +80,17 @@ class Model():
         
     def get_file_content(self, filename):
         try:
-            f = open(filename, 'r')
+            f = codecs.open(filename, 'r', encoding="utf-8")
             return f.read()
         except Exception:
-            return False
-        
-    
+            pass
+        try:
+            f = codecs.open(filename, 'r', encoding="utf-8")
+            return f.read()
+        except Exception:
+            pass
+        return False
+
     def write_file_content(self, filename, data):
         f = open(filename, 'w')
         f.write( str(data) )
