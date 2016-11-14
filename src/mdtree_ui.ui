@@ -24,7 +24,7 @@
        <item>
         <widget class="QPushButton" name="btn_addfavorite">
          <property name="text">
-          <string>PushButton</string>
+          <string>Add Favorite</string>
          </property>
         </widget>
        </item>

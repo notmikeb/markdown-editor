@@ -51,6 +51,12 @@ class Controller():
         self.refresh_recent_documents()
         self.load_themes()
         
+        self.VIEW.load_favorite(self.MODEL.get_favorite())
+        #self.VIEW.panel_left.connect(self.VIEW.panel_left,
+        #                                          QtCore.SIGNAL("datasignal(QString)"),
+        #                                          self.on_favorite_changed)
+        self.VIEW.panel_left.datasignal.connect(self.on_favorite_changed)
+        
     @pyqtSlot()
     def renderInput(self):
         
@@ -95,6 +101,11 @@ class Controller():
     def tabCloseRequestedSlot(self,argTabIndex):
         self.MODEL.remove_tab(argTabIndex)
         self.VIEW.remove_tab(argTabIndex)
+    @pyqtSlot(QtCore.QStringList)
+    def on_favorite_changed(self, slist):
+        print ("*" * 5 + "on_favorite_changed")
+        for i in range(slist.count()):
+            print(slist[i])
         
     def show_preferences(self):
         self.VIEW.show_preferences()

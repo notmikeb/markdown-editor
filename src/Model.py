@@ -154,3 +154,6 @@ class Model():
         data[ key ] = value
         self.write_file_content(Constants.CONFIG_FILE, json.dumps(data))
         
+    def get_favorite(self):
+        flist = ["d:/users/dalone/git", "d:/temp", "C:\\Users\\dalone\\Desktop" ]
+        return flist

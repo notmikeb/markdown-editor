@@ -18,6 +18,7 @@ from PyQt4.QtGui import *
 mwin, bwin = uic.loadUiType("mdtree_ui.ui")
 
 class myLeftPanel(mwin, bwin):
+    datasignal = QtCore.pyqtSignal(QStringList, name= "datasignal(QStringList)")
     def __init__(self):
         super(myLeftPanel, self).__init__()
         self.setupUi(self)
@@ -29,13 +30,41 @@ class myLeftPanel(mwin, bwin):
         self.tree_dir.resize(QSize(100, self.tree_dir.height()))
         for i in range(1, self.model.columnCount()):
             self.tree_dir.hideColumn(i)
-        #self.tree_dir.doubleClicked.connect(self.btn_doubleclicked_check)
+        self.connect(self.box_favorite, QtCore.SIGNAL("currentIndexChanged(QString)"), 
+        self.on_change_favorite)
+        self.connect(self.btn_addfavorite, QtCore.SIGNAL("clicked()"),
+                     self.on_add_favorite)
 
     def btn_doubleclicked_check(self, index):
         print("double click")
         d = index.data()
         if len(d.toString()) > 0:
             print(d.toString())
+    def load_favorite(self):
+        pass
+    def on_change_favorite(self, folderpath):
+        print(folderpath)
+        qmi = self.model.index(folderpath)
+        if qmi:
+            self.tree_dir.expand(qmi)
+            self.tree_dir.scrollTo(qmi)
+            self.tree_dir.selectionModel().select(qmi, QItemSelectionModel.SelectCurrent)
+    def on_add_favorite(self):
+        indexes = self.tree_dir.selectionModel().selectedIndexes()
+        exist = False
+        if len(indexes) > 0 and self.model.isDir(indexes[0]):
+            filepath = self.model.filePath(indexes[0])
+            for i in range(self.box_favorite.count()):
+                if filepath == self.box_favorite.itemText(i):
+                    exist = True
+                    break
+            if not exist:
+                self.box_favorite.addItem(filepath)
+                datalist = []
+                for i in range(self.box_favorite.count()):
+                    datalist.append(self.box_favorite.itemText(i))
+                self.datasignal.emit(datalist)
+
 
 class myTextEdit(QtGui.QTextEdit):
         
@@ -73,8 +102,7 @@ class myTextEdit(QtGui.QTextEdit):
         
         preview.reload()
         
-        event.accept()
-    
+        event.accept()    
 
 class View(QtGui.QMainWindow):
     openexist = QtCore.pyqtSignal(QtCore.QString, name = "openexist(QtCore.QString)")
@@ -451,3 +479,8 @@ class View(QtGui.QMainWindow):
             subprocess.Popen(["open", path])
         else:
             subprocess.Popen(["xdg-open", path])
+    def load_favorite(self, pathlist):
+        ql = QtCore.QStringList(pathlist)
+        self.panel_left.box_favorite.clear()
+        self.panel_left.box_favorite.addItems(pathlist)
+            
