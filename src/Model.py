@@ -155,5 +155,8 @@ class Model():
         self.write_file_content(Constants.CONFIG_FILE, json.dumps(data))
         
     def get_favorite(self):
-        flist = ["d:/users/dalone/git", "d:/temp", "C:\\Users\\dalone\\Desktop" ]
+        flist = self.get_from_config("favorite")
+        if not flist:
+            flist = []
+        #flist = ["d:/users/dalone/git", "d:/temp", "C:\\Users\\dalone\\Desktop" ]
         return flist

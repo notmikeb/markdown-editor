@@ -104,8 +104,10 @@ class Controller():
     @pyqtSlot(QtCore.QStringList)
     def on_favorite_changed(self, slist):
         print ("*" * 5 + "on_favorite_changed")
+        nlist = []
         for i in range(slist.count()):
-            print(slist[i])
+            nlist.append( str( slist[i].toUtf8() ))
+        self.MODEL.save_in_config("favorite", nlist)
         
     def show_preferences(self):
         self.VIEW.show_preferences()
