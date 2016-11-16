@@ -15,6 +15,7 @@ import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+
 mwin, bwin = uic.loadUiType("mdtree_ui.ui")
 
 class myLeftPanel(mwin, bwin):
@@ -119,6 +120,31 @@ class View(QtGui.QMainWindow):
             self.ctrlText = 'Cmd'
         
         self.initUI(_widget)
+        self.setDockOptions(
+            QMainWindow.AllowNestedDocks
+            | QMainWindow.AllowTabbedDocks
+            # |  QtWidgets.QMainWindow.AnimatedDocks
+        )
+
+        # Create floater for shell
+        self._shellDock = dock = QDockWidget(self)
+        self._shellLayout = QHBoxLayout()
+        self._pte_code = QPlainTextEdit()
+        dock.setFeatures(dock.DockWidgetMovable)
+        dock.setObjectName('code')
+        dock.setWindowTitle('code')
+        self._shellLayout.addWidget(self._pte_code)
+        self._pte_code.setMidLineWidth(20)
+        self._pte_code.appendPlainText(QString("1\n2\n3\n"))
+        dock.setWidget(self._pte_code)
+        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, dock)
+
+        font = QtGui.QFont();
+        font.setFamily( Constants.EDIT_FONT );
+        font.setStyleHint(QtGui.QFont.Monospace);
+        font.setFixedPitch(True);
+        font.setPointSize(20);
+        self._pte_code.setFont( font )
         
     @pyqtSlot()
     def scroll(self):
@@ -156,6 +182,7 @@ class View(QtGui.QMainWindow):
         preview = QWebView()
         preview.setGeometry(0,200,200,200)
         inputEdit.preview = preview
+        preview.hide()
         
         scrollbar = inputEdit.verticalScrollBar()
         scrollbar.connect(scrollbar,SIGNAL("valueChanged()"),self,SLOT("scroll()"))
@@ -167,6 +194,7 @@ class View(QtGui.QMainWindow):
         
         self.tabs.addTab(tab,title)
         #self.tabs.setWindowTitle('PyQt QTabWidget Add Tabs and Widgets Inside Tab')
+        self.connect(inputEdit, SIGNAL("cursorPositionChanged()"), lambda : self.on_cursorPositionChange(inputEdit))
 
         splitter = QtGui.QSplitter()
         tab_hbox = QtGui.QHBoxLayout()
@@ -179,7 +207,21 @@ class View(QtGui.QMainWindow):
         tab.setLayout(tab_hbox)
         
         return [inputEdit, preview]
-    
+
+    def on_cursorPositionChange(self, sender):
+        if sender != None:
+            c = sender.textCursor()
+            if c != None:
+                self.update_status("Line: " + str(c.blockNumber()+1) + " Column:" + str(c.columnNumber() + 1))
+                c.select(QTextCursor.LineUnderCursor)
+                linestring = c.selectedText()
+                self.update_code(linestring)
+
+    def update_code(self, line):
+        self._pte_code.setStatusTip(line)
+        self._pte_code.clear()
+        self._pte_code.appendPlainText(line)
+
     def remove_tab(self, index):
         self.tabs.removeTab(index)
         
@@ -242,10 +284,10 @@ class View(QtGui.QMainWindow):
         indexs = self.panel_left.tree_dir.selectionModel().selectedIndexes()
         for i in [indexs[0]]:
             newfilepath = self.panel_left.model.filePath(i)
-            if newfilepath != oldfilepath:
+            if newfilepath != oldfilepath and not os.path.isdir(newfilepath):
                 if  str(newfilepath.toLower().toLocal8Bit()).endswith( tuple([".md",".txt"]) ):
                     print(newfilepath)
-                    self.openexist.emit(QString(newfilepath))
+                self.openexist.emit(QString(newfilepath))
             filepath = newfilepath
         # send a action to
         #self.openexist.emit( QString(filepath))
@@ -298,6 +340,11 @@ class View(QtGui.QMainWindow):
         self.italicAction.setShortcut('Ctrl+I')
         self.italicAction.setStatusTip('Italic ('+self.ctrlText+'+I)')
         self.italicAction.triggered.connect(self.text_make_italic)
+
+        self.showToggleAction = QtGui.QAction(QtGui.QIcon('images/format-text-italic.png'), '&Markdown', self)
+        self.showToggleAction.setShortcut('Ctrl-M')
+        self.showToggleAction.setStatusTip('Markdown'+self.ctrlText+'+M)')
+        self.showToggleAction.triggered.connect(self.toggle_webview)
         
         self.quoteAction = QtGui.QAction(QtGui.QIcon('images/quote-left.png'), '&Quote', self)
         if self.isMac is True:
@@ -357,6 +404,7 @@ class View(QtGui.QMainWindow):
         actionsMenu.addAction(self.exportHTMLAction)
         actionsMenu.addAction(self.viewInBrowserAction)
         actionsMenu.addAction(self.showInFolderAction)
+        actionsMenu.addAction(self.showToggleAction)
         
         toolsMenu = menubar.addMenu('&Tools')
         
@@ -461,6 +509,14 @@ class View(QtGui.QMainWindow):
     
     def active_preview(self):
         return self.tabs.currentWidget().findChildren(QWebView)[0]
+
+    def toggle_webview(self):
+        a = self.tabs.currentWidget().findChildren(QWebView)[0]
+        if not a.isHidden():
+            a.hide()
+        else:
+            a.show()
+        print(type(a), repr(a))
     
     def change_active_tab(self, index):
         self.tabs.setCurrentIndex(index)
