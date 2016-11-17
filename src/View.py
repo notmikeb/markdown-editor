@@ -25,7 +25,18 @@ class myLeftPanel(mwin, bwin):
         self.setupUi(self)
         self.show()
         self.model = QtGui.QFileSystemModel()
+        self.model.setFilter(QDir.AllDirs | QDir.NoDotAndDotDot | QDir.AllEntries) 
+        self.model.setNameFilters(QStringList(["*.md", "*.txt", "*.log"]))
+        self.model.setNameFilterDisables(False)
+		
         print(QDir.currentPath())
+		
+        self.proxymodel = QSortFilterProxyModel()
+        self.proxymodel.setSourceModel(self.model)
+        self.proxymodel.setDynamicSortFilter(True)
+        #self.proxymodel.setFilterRegExp(QString("*.txt"))
+        #self.proxymodel.setFilterRegExp(QRegExp(".txt", Qt.CaseInsensitive,QRegExp.FixedString))
+        self.proxymodel.setFilterKeyColumn(0)
         self.tree_dir.setModel(self.model)
         self.model.setRootPath("")
         self.tree_dir.resize(QSize(100, self.tree_dir.height()))
@@ -103,7 +114,8 @@ class myTextEdit(QtGui.QTextEdit):
         
         preview.reload()
         
-        event.accept()    
+        event.accept()
+
 
 class View(QtGui.QMainWindow):
     openexist = QtCore.pyqtSignal(QtCore.QString, name = "openexist(QtCore.QString)")
@@ -145,6 +157,23 @@ class View(QtGui.QMainWindow):
         font.setFixedPitch(True);
         font.setPointSize(20);
         self._pte_code.setFont( font )
+        self._pte_code.setEnabled(False)
+        self._pte_code.setReadOnly(True)
+
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, e):
+        self.acceptDrops()
+        if e.mimeData().hasUrls():
+            e.accept()
+
+    def dropEvent(self, e):
+        if e.mimeData().hasUrls():
+            url = e.mimeData().urls()
+            if len(url) > 0:
+                filename = url[0].toLocalFile()
+                self.openexist.emit(QString(filename))
+        print("dropevent")
         
     @pyqtSlot()
     def scroll(self):
@@ -219,8 +248,14 @@ class View(QtGui.QMainWindow):
 
     def update_code(self, line):
         self._pte_code.setStatusTip(line)
+        data = line.split("|")
         self._pte_code.clear()
-        self._pte_code.appendPlainText(line)
+        if len(data)> 2:
+            self._pte_code.appendPlainText(data[2].simplified())
+            if data[2].simplified().endsWith("=") and len(data) > 3:
+                self._pte_code.appendPlainText(data[3].simplified())
+        else:
+            self._pte_code.appendPlainText(line)
 
     def remove_tab(self, index):
         self.tabs.removeTab(index)
@@ -364,6 +399,7 @@ class View(QtGui.QMainWindow):
         self.toolbar.addAction(self.newAction)
         self.toolbar.addAction(self.openAction)
         self.toolbar.addAction(self.saveAction)
+        self.toolbar.addAction(self.showToggleAction)
         
         self.toolbar2 = self.addToolBar('Editor actions')
         
