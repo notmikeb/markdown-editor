@@ -279,7 +279,9 @@ class View(QtGui.QMainWindow):
         self.panel_left.tree_dir.doubleClicked.connect(self.on_doubleclicked_file)
         
         self.setCentralWidget(widget)
-        
+        self.edit_find = QLineEdit()
+        self.edit_find.setMaximumWidth(80)
+        self.lastFindPos = -1
         self.makeMenubar() 
         
         self.update_status('Ready')
@@ -358,8 +360,8 @@ class View(QtGui.QMainWindow):
         
         self.showInFolderAction = QtGui.QAction(QtGui.QIcon('images/folder-move.png'), '&Open file folder', self)
         self.showInFolderAction.setDisabled(True)
-        self.showInFolderAction.setShortcut('Ctrl+F')
-        self.showInFolderAction.setStatusTip('Open file folder ('+self.ctrlText+'+F)')
+        self.showInFolderAction.setShortcut('Ctrl+O')
+        self.showInFolderAction.setStatusTip('Open file folder ('+self.ctrlText+'+O)')
         
         self.exitAction = QtGui.QAction(QtGui.QIcon('images/application-exit.png'), '&Exit', self)        
         self.exitAction.setShortcut('Alt+F4')
@@ -376,10 +378,15 @@ class View(QtGui.QMainWindow):
         self.italicAction.setStatusTip('Italic ('+self.ctrlText+'+I)')
         self.italicAction.triggered.connect(self.text_make_italic)
 
-        self.showToggleAction = QtGui.QAction(QtGui.QIcon('images/format-text-italic.png'), '&Markdown', self)
+        self.showToggleAction = QtGui.QAction(QtGui.QIcon('images/toggle-markdown.jpg'), '&Markdown', self)
         self.showToggleAction.setShortcut('Ctrl-M')
         self.showToggleAction.setStatusTip('Markdown'+self.ctrlText+'+M)')
         self.showToggleAction.triggered.connect(self.toggle_webview)
+
+        self.findAction = QtGui.QAction(QtGui.QIcon('images/find.jpg'), '&Find', self)
+        self.findAction.setShortcut('Ctrl+F')
+        self.findAction.setStatusTip('Find ('+self.ctrlText+'+F)')
+        self.findAction.triggered.connect(self.find_text)		
         
         self.quoteAction = QtGui.QAction(QtGui.QIcon('images/quote-left.png'), '&Quote', self)
         if self.isMac is True:
@@ -413,6 +420,9 @@ class View(QtGui.QMainWindow):
         self.toolbar3.addAction(self.exportHTMLAction)
         self.toolbar3.addAction(self.viewInBrowserAction)
         self.toolbar3.addAction(self.showInFolderAction)
+
+        self.toolbar3.addWidget(self.edit_find)
+        self.toolbar3.addAction(self.findAction)
         
         
         menubar = self.menuBar()
@@ -575,4 +585,26 @@ class View(QtGui.QMainWindow):
         ql = QtCore.QStringList(pathlist)
         self.panel_left.box_favorite.clear()
         self.panel_left.box_favorite.addItems(pathlist)
-            
+    def find_text(self):
+        text = self.edit_find.text().toLower()
+        inputEdit = self.active_input()
+        if not inputEdit:
+		    print ("no inputedit")
+        else:
+		    inputEdit.selectAll()
+		    inputEdit.setFocus()
+        c = inputEdit.textCursor()
+        content = inputEdit.toPlainText()
+        index = content.indexOf(text.toLower(), self.lastFindPos+1)
+        self.lastFindPos = index
+        print (index)
+        if index >= 0:
+            pass
+            c.setPosition(self.lastFindPos) 
+            c.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor, len(text))
+            inputEdit.setTextCursor(c)
+        else:
+            self.lastFindPos = -1
+            c.setPosition(0) 
+            inputEdit.setTextCursor(c)
+        
