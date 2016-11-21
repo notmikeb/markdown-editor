@@ -14,6 +14,7 @@ from PyQt4 import QtCore, QtGui, uic
 import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+import FilterLineEditor
 
 
 mwin, bwin = uic.loadUiType("mdtree_ui.ui")
@@ -46,6 +47,46 @@ class myLeftPanel(mwin, bwin):
         self.on_change_favorite)
         self.connect(self.btn_addfavorite, QtCore.SIGNAL("clicked()"),
                      self.on_add_favorite)
+        self.filtereditor = FilterLineEditor.NameFilter(self)
+        self.vlayout.addWidget(self.filtereditor)
+        self.patheditor = FilterLineEditor.PathInput(self)
+        self.vlayout.addWidget(self.patheditor)
+
+        self.patheditor.dirChanged.connect(self.on_change_inputpath)
+        self.connect(self.tree_dir, QtCore.SIGNAL("clicked(QModelIndex)"), self.on_change_dirpath)
+    def getTreePath(self):
+        filepath = QDir.currentPath()
+        indexes = self.tree_dir.selectionModel().selectedIndexes()
+        #print ("getTreePath ", str(len(indexes)))
+        if len(indexes) > 0:
+            filepath = self.model.filePath(indexes[len(indexes)-1])
+            filepath = os.path.normcase(str(filepath.toUtf8()))
+        return filepath
+
+    def on_change_dirpath(self, index):
+        #change inputpath to the new selected folder
+        if isinstance(index, QModelIndex):
+            filepath = self.model.filePath(index)
+            filepath = os.path.normcase(str(filepath.toUtf8()))
+            self.patheditor.setText(filepath)
+
+    def on_change_inputpath(self, newpath):
+        # change tree_dir to the new path
+        if not isinstance(newpath, QString):
+            newpath = QString(newpath)
+        index = self.model.index(QString(newpath))
+        self.tree_dir.scrollTo(index)
+        self.tree_dir.selectionModel().select(index, QItemSelectionModel.ClearAndSelect)
+
+    @property
+    def nameFilter(self):
+        return self._nameFilter
+
+    @nameFilter.setter
+    def nameFilter(self, value):
+        print(value, type(value))
+        self.model.setNameFilters(QStringList(value.split(" ")))
+        self._nameFilter = value
 
     def btn_doubleclicked_check(self, index):
         print("double click")

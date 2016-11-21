@@ -52,7 +52,8 @@ class Model():
         
     def set_active_tab(self, index):
         self.ACTIVE_TAB = index
-        self.FILE_PATH = self.TABS[ index ]['path']
+        if index > 0 and index < len(self.TABS):
+            self.FILE_PATH = self.TABS[ index ]['path']
         
     def set_document_path(self, file_path):
         self.FILE_PATH = file_path
