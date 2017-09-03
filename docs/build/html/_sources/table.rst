@@ -1,6 +1,3 @@
-this is a day.rst
--------------------
-
 
    +------------------------------------------+
    | hello, world                             |
@@ -11,16 +8,3 @@ this is a day.rst
    | * 链接地址在后面定义，如： GitHub_ 。    |
    | * 反引号括起多个单词的链接。如 `my blog` |
    +------------------------------------------+
-
-
-** this ** is content
-
-.. msc::
-
-   hscale = "0.5";
-
-   a,b,c;
-
-   a->b [ label = "ab()" ] ;
-   b->c [ label = "bc(TRUE)"];
-   c=>c [ label = "process()" ];
